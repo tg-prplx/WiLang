@@ -147,8 +147,6 @@ namespace WiLang
         {
             if (bytecode == null || bytecode.Length == 0)
                 throw new Exception("Bytecode is empty or null.");
-            foreach (var item in bytecode)
-                if (item == null) throw new Exception("Null in bytecode!");
             this.bytecode = bytecode;
             ip = 0;
             while (ip < bytecode.Length)
