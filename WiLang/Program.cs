@@ -7,30 +7,22 @@ namespace WiLang
     {
         static void Main()
         {
-            object[] code = {
-            It.PUSH, 0,         // 0
-            It.STORE, "i",      // 2
+            Instruction[] bcode = {
+                new Instruction(It.PUSH, new Operand(0)),
 
-            It.LOAD, "i",       // 4
-            It.PUSH, 10000000,     // 6
-            It.GT,              // 8
-            It.JZ, 13,          // 9
-            It.JUMP, 24,        // 11
+                new Instruction(It.DUP),
+                new Instruction(It.PUSH, new Operand(10000000)),
+                new Instruction(It.GT),
+                new Instruction(It.JZ, new Operand(6)),
+                new Instruction(It.HALT),
 
-            It.LOAD, "i",       // 13
-            // It.PRINT,        // 15
-            It.LOAD, "i",       // 15
-            It.PUSH, 1,         // 17
-            It.ADD,             // 19
-            It.STORE, "i",      // 20
-            It.JUMP, 4,         // 22
-
-            It.HALT             // 23
-        };
+                new Instruction(It.INC),
+                new Instruction(It.JUMP, new Operand(1)),
+            };
             var vm = new VM();
             var sw = new Stopwatch();
             sw.Start();
-            vm.Execv(code);
+            vm.Execv(bcode);
             sw.Stop();
             Console.WriteLine($"Время выполнения: {sw.ElapsedMilliseconds} мс");
         }
