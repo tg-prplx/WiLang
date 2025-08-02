@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 enum Types
 {
     TNone,
@@ -22,8 +23,11 @@ struct Variable
     {
         return $"{VarType}: {Value}";
     }
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public int AsInt() => VarType == Types.TInteger ? (int)Value : throw new InvalidCastException();
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public string AsString() => VarType == Types.TString ? (string)Value : throw new InvalidCastException();
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public double AsFloat() => VarType == Types.TFloat ? (double)Value : throw new InvalidCastException();
     public Variable CastToInt()
     {
@@ -58,10 +62,11 @@ struct Variable
                 throw new InvalidCastException($"Cannot cast {VarType} to float.");
         }
     }
-
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public Variable CastToString()
     {
         return new Variable(Types.TString, Value.ToString() ?? "None");
     }
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public Variable Clone() => new Variable(this.VarType, this.Value);
 }

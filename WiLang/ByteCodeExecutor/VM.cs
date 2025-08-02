@@ -6,30 +6,28 @@ namespace WiLang
     class VM
     {
         private Dictionary<string, Variable> vars = new();
-        private Stack<Variable> stack = new();
+        private WiStack<Variable> stack = new(1024);
         private long ip = 0;
-        private object[] bytecode;
-        private Stack<long> callStack = new();
+        private Instruction[] bytecode;
+        private WiStack<long> callStack = new(512);
 
-        private int _SV(It i)
+        private int _SV(Instruction instr)
         {
-            switch (i)
+            switch (instr.Op)
             {
                 case It.PUSH:
-                    ip++;
-                    if (ip >= bytecode.Length || bytecode[ip] == null) throw new Exception($"Pushing value cannot be null or missing. IP: {ip}");
-                    var v = bytecode[ip];
-                    if (v is int iv)
-                        stack.Push(new Variable(Types.TInteger, iv));
-                    else if (v is double dv)
-                        stack.Push(new Variable(Types.TFloat, dv));
-                    else if (v is string sv)
-                        stack.Push(new Variable(Types.TString, sv));
+                    var argPush = instr.Arg ?? throw new Exception($"PUSH: argument required. IP: {ip}");
+                    if (argPush.I.HasValue)
+                        stack.Push(new Variable(Types.TInteger, argPush.I.Value));
+                    else if (argPush.D.HasValue)
+                        stack.Push(new Variable(Types.TFloat, argPush.D.Value));
+                    else if (argPush.S != null)
+                        stack.Push(new Variable(Types.TString, argPush.S));
                     else
-                        throw new Exception($"Push: unsupported literal type {v.GetType().Name}. IP: {ip}");
+                        throw new Exception($"PUSH: unsupported literal type. IP: {ip}");
                     break;
                 case It.POP:
-                    if (stack.Count == 0) throw new Exception($"Popping stack cannot be empty. IP: {ip}");
+                    if (stack.Count == 0) throw new Exception($"POP: stack is empty. IP: {ip}");
                     stack.Pop();
                     break;
                 case It.ADD:
@@ -51,32 +49,25 @@ namespace WiLang
                     BaseOPs.SqrtOp(ref stack, ref ip);
                     break;
                 case It.PRINT:
-                    if (stack.Count == 0) throw new Exception($"Print: stack is empty. IP: {ip}");
-                    var val = stack.Peek();
-                    Console.WriteLine(val.Value);
+                    if (stack.Count == 0) throw new Exception($"PRINT: stack is empty. IP: {ip}");
+                    Console.WriteLine(stack.Peek().Value);
                     break;
                 case It.STORE:
-                    if (stack.Count < 1) throw new Exception($"Store instruction needs at least 1 value in stack. IP: {ip}");
-                    ip++;
+                    if (stack.Count < 1) throw new Exception($"STORE: stack is empty. IP: {ip}");
                     var valueST = stack.Pop();
-                    var nameST = bytecode[ip];
-                    if (nameST is string sname) vars[sname] = valueST;
-                    else throw new Exception($"Store variable name must be String type. IP: {ip}");
+                    var nameST = instr.Arg?.S ?? throw new Exception($"STORE: arg must be string var name. IP: {ip}");
+                    vars[nameST] = valueST;
                     break;
                 case It.LOAD:
-                    ip++;
-                    var nameLD = bytecode[ip];
-                    if (nameLD is string lname)
-                    {
-                        if (vars.TryGetValue(lname, out Variable varLD)) stack.Push(varLD);
-                        else throw new Exception($"Cannot load variable {lname} because it doesn't exist. IP: {ip}");
-                    }
-                    else throw new Exception($"Load variable name must be String type. IP: {ip}");
+                    var nameLD = instr.Arg?.S ?? throw new Exception($"LOAD: arg must be string var name. IP: {ip}");
+                    if (vars.TryGetValue(nameLD, out Variable varLD))
+                        stack.Push(varLD);
+                    else
+                        throw new Exception($"LOAD: variable '{nameLD}' not found. IP: {ip}");
                     break;
                 case It.JUMP:
-                    ip++;
-                    var rf = bytecode[ip];
-                    Jumps._MakeJump(rf, ref ip, ref bytecode, ref stack);
+                    var offset = instr.Arg?.I ?? throw new Exception($"JUMP: arg required. IP: {ip}");
+                    Jumps._MakeJump(offset, ref ip, ref bytecode, ref stack);
                     break;
                 case It.JZ:
                     Jumps._ConditionalJump(false, ref ip, ref bytecode, ref stack);
@@ -103,9 +94,7 @@ namespace WiLang
                     BaseOPs.CompareOp((a, b) => a != b, "NE", ref stack, ref ip);
                     break;
                 case It.DUP:
-                    if (stack.Count == 0) throw new Exception("DUP: stack is empty");
-                    var item = stack.Peek();
-                    stack.Push(item.Clone());
+                    stack.Dup();
                     break;
                 case It.INC:
                     BaseOPs.IncDec(stack, true);
@@ -117,33 +106,31 @@ namespace WiLang
                     ip = bytecode.Length;
                     break;
                 case It.CALL:
-                    ip++;
+                    var target = instr.Arg?.I ?? throw new Exception($"CALL: arg required. IP: {ip}");
                     callStack.Push(ip + 1);
-                    Jumps._MakeJump(bytecode[ip], ref ip, ref bytecode, ref stack);
+                    Jumps._MakeJump(target, ref ip, ref bytecode, ref stack);
                     break;
                 case It.RET:
-                    var rft = callStack.Pop();
-                    Jumps._MakeJump(rft, ref ip, ref bytecode, ref stack);
+                    if (callStack.Count == 0) throw new Exception($"RET: call stack empty. IP: {ip}");
+                    var retIP = callStack.Pop();
+                    Jumps._MakeJump(retIP, ref ip, ref bytecode, ref stack);
                     break;
                 case It.CASTF:
-                    var castf = stack.Pop();
-                    stack.Push(castf.CastToFloat());
+                    stack.Push(stack.Pop().CastToFloat());
                     break;
                 case It.CASTI:
-                    var casti = stack.Pop();
-                    stack.Push(casti.CastToInt());
+                    stack.Push(stack.Pop().CastToInt());
                     break;
                 case It.CASTS:
-                    var casts = stack.Pop();
-                    stack.Push(casts.CastToString());
+                    stack.Push(stack.Pop().CastToString());
                     break;
                 default:
-                    throw new Exception($"Unknown instruction {i} at IP: {ip}");
+                    throw new Exception($"Unknown instruction {instr.Op} at IP: {ip}");
             }
             return 0;
         }
 
-        public void Execv(object[] bytecode)
+        public void Execv(Instruction[] bytecode)
         {
             if (bytecode == null || bytecode.Length == 0)
                 throw new Exception("Bytecode is empty or null.");
@@ -151,9 +138,7 @@ namespace WiLang
             ip = 0;
             while (ip < bytecode.Length)
             {
-                if (bytecode[ip] is not It instr)
-                    throw new Exception($"Unknown instruction: {bytecode[ip]} at IP: {ip}");
-                _SV(instr);
+                _SV(bytecode[ip]);
                 ip++;
             }
         }

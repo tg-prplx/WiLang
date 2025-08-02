@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -9,7 +10,7 @@ namespace WiLang
 {
     static class BaseOPs
     {
-        public static void ArithmeticOp(Func<Variable, Variable, Variable> op, string opname, ref Stack<Variable> stack, ref long ip)
+        public static void ArithmeticOp(Func<Variable, Variable, Variable> op, string opname, ref WiStack<Variable> stack, ref long ip)
         {
             if (stack.Count < 2)
                 throw new Exception($"{opname}: needs at least 2 values in stack. IP: {ip}");
@@ -36,7 +37,7 @@ namespace WiLang
             }
         }
 
-        public static void CompareOp(Func<dynamic, dynamic, bool> cmp, string opname, ref Stack<Variable> stack, ref long ip)
+        public static void CompareOp(Func<dynamic, dynamic, bool> cmp, string opname, ref WiStack<Variable> stack, ref long ip)
         {
             if (stack.Count < 2)
                 throw new Exception($"{opname}: needs at least 2 values in stack. IP: {ip}");
@@ -59,7 +60,8 @@ namespace WiLang
 
             stack.Push(new Variable(Types.TInteger, result ? 1 : 0));
         }
-       public static void SqrtOp(ref Stack<Variable> stack, ref long ip)
+
+       public static void SqrtOp(ref WiStack<Variable> stack, ref long ip)
         {
             if (stack.Count < 1)
                 throw new Exception($"Sqrt: stack is empty. IP: {ip}");
@@ -71,8 +73,8 @@ namespace WiLang
             else
                 throw new Exception($"Sqrt: unsupported type {val.VarType}. IP: {ip}");
         }
-
-        public static void IncDec(Stack<Variable> stack, bool isInc)
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void IncDec(WiStack<Variable> stack, bool isInc)
         {
             if (stack.Count == 0) throw new Exception((isInc ? "INC" : "DEC") + ": stack is empty");
             var val = stack.Pop();
