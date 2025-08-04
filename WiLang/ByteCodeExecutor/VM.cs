@@ -89,6 +89,9 @@ namespace WiLang
                     if (stack.Count == 0) throw new Exception($"PRINT: stack is empty. IP: {ip}");
                     Console.WriteLine(stack.Peek().Value);
                     break;
+                case It.INPUT:
+                    stack.Push(new Variable(Types.TString, Console.ReadLine() ?? ""));
+                    break;
                 case It.STORE:
                     if (stack.Count < 1) throw new Exception($"STORE: stack is empty. IP: {ip}");
                     var valueST = stack.Pop();

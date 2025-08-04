@@ -23,6 +23,7 @@ namespace WiLang
         JZ,
         POP,
         PRINT,
+        INPUT,
         LT, 
         GT, 
         LE, 
