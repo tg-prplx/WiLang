@@ -6,34 +6,31 @@ namespace WiLang
 {
     static class Jumps
     {
-
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void _ConditionalJump(bool jumpIfTrue, ref long ip, ref Instruction[] bytecode, ref WiStack<Variable> stack)
         {
             var instr = bytecode[ip];
-            int? targetAddr = instr.Arg?.Value is WiNumberValue num
-                                ? num.Value.Value
-                                : null;
-            if (stack.Count == 0)
-                throw new Exception($"Jump: stack is empty. IP: {ip}");
+            if (instr.Arg is not WiNumberValue num)
+                throw new Exception($"Jump: bad or missing argument. IP: {ip}");
+            int targetAddr = num.Value.Value ?? 0;
+            if (stack.Count == 0) throw new Exception($"Jump: stack is empty. IP: {ip}");
             var val = stack.Pop();
-            bool isTrue =
-                val.VarType == Types.TInteger && val.AsInt() != 0 ||
-                val.VarType == Types.TFloat && val.AsFloat() != 0.0 ||
-                val.VarType == Types.TString && !string.IsNullOrEmpty(val.AsString());
-
+            bool isTrue = val.AsBool();
             if ((jumpIfTrue && isTrue) || (!jumpIfTrue && !isTrue))
             {
                 if (targetAddr < 0 || targetAddr >= bytecode.Length)
                     throw new Exception($"Out of bytecode jump. IP: {ip}");
-                ip = targetAddr.Value - 1;
+                ip = targetAddr - 1;
             }
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void _MakeJump(long rf, ref long ip, ref Instruction[] bytecode, ref WiStack<Variable> stack)
+        public static void _MakeJump(long target, ref long ip, ref Instruction[] bytecode, ref WiStack<Variable> stack)
         {
-            if (rf < 0 || rf >= bytecode.Length) throw new Exception($"Out of bytecode jump. IP: {ip}");
-            ip = rf - 1;
+            if (target < 0 || target >= bytecode.Length)
+                throw new Exception($"Out of bytecode jump. IP: {ip}");
+            ip = target - 1;
         }
     }
 }
+

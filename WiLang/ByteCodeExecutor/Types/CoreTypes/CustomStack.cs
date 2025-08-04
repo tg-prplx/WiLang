@@ -45,6 +45,7 @@ namespace WiLang
             }
             else throw new InvalidOperationException();
         }
+
         public int Count => sp;
     }
 

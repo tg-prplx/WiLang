@@ -15,8 +15,4 @@
     <Optimize>True</Optimize>
   </PropertyGroup>
 
-  <ItemGroup>
-    <Folder Include="Tokenizer\Types\" />
-  </ItemGroup>
-
 </Project>
