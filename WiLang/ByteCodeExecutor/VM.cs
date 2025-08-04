@@ -48,9 +48,13 @@ namespace WiLang
                     stack.Pop();
                     break;
                 case It.ADD:
+                    if (stack.Count < 2)
+                        throw new Exception($"ADD: stack has less than 2 values! IP: {ip}");
                     stack.Push(stack.Pop() + stack.Pop());
                     break;
                 case It.SUB:
+                    if (stack.Count < 2)
+                        throw new Exception($"SUB: stack has less than 2 values! IP: {ip}");
                     {
                         var b = stack.Pop();
                         var a = stack.Pop();
@@ -58,9 +62,13 @@ namespace WiLang
                     }
                     break;
                 case It.MUL:
+                    if (stack.Count < 2)
+                        throw new Exception($"MUL: stack has less than 2 values! IP: {ip}");
                     stack.Push(stack.Pop() * stack.Pop());
                     break;
                 case It.DIV:
+                    if (stack.Count < 2)
+                        throw new Exception($"DIV: stack has less than 2 values! IP: {ip}");
                     {
                         var b = stack.Pop();
                         var a = stack.Pop();
@@ -68,6 +76,8 @@ namespace WiLang
                     }
                     break;
                 case It.MOD:
+                    if (stack.Count < 2)
+                        throw new Exception($"MOD: stack has less than 2 values! IP: {ip}");
                     {
                         var b = stack.Pop();
                         var a = stack.Pop();
