@@ -10,7 +10,9 @@ namespace WiLang
         public static void _ConditionalJump(bool jumpIfTrue, ref long ip, ref Instruction[] bytecode, ref WiStack<Variable> stack)
         {
             var instr = bytecode[ip];
-            int? targetAddr = instr.Arg?.I;
+            int? targetAddr = instr.Arg?.Value is WiNumberValue num
+                                ? num.Value.Value
+                                : null;
             if (stack.Count == 0)
                 throw new Exception($"Jump: stack is empty. IP: {ip}");
             var val = stack.Pop();
@@ -26,11 +28,11 @@ namespace WiLang
                 ip = targetAddr.Value - 1;
             }
         }
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void _MakeJump(long rf, ref long ip, ref Instruction[] bytecode, ref WiStack<Variable> stack)
         {
-            if (rf < 0 || rf >= bytecode.Length)
-                throw new Exception($"Out of bytecode jump. IP: {ip}");
+            if (rf < 0 || rf >= bytecode.Length) throw new Exception($"Out of bytecode jump. IP: {ip}");
             ip = rf - 1;
         }
     }

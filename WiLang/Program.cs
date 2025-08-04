@@ -8,16 +8,14 @@ namespace WiLang
         static void Main()
         {
             Instruction[] bcode = {
-                new Instruction(It.PUSH, new Operand(0)),
-
+                new Instruction(It.PUSH, new Operand(new WiNumber(1))),
                 new Instruction(It.DUP),
-                new Instruction(It.PUSH, new Operand(10000000)),
+                new Instruction(It.PUSH, new Operand(new WiNumber(10000000))),
                 new Instruction(It.GT),
-                new Instruction(It.JZ, new Operand(6)),
+                new Instruction(It.JZ, new Operand(new WiNumber(6))),
                 new Instruction(It.HALT),
-
                 new Instruction(It.INC),
-                new Instruction(It.JUMP, new Operand(1)),
+                new Instruction(It.JUMP, new Operand(new WiNumber(1))),
             };
             var vm = new VM();
             var sw = new Stopwatch();

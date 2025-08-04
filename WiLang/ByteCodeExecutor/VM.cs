@@ -16,16 +16,24 @@ namespace WiLang
             switch (instr.Op)
             {
                 case It.PUSH:
-                    var argPush = instr.Arg ?? throw new Exception($"PUSH: argument required. IP: {ip}");
-                    if (argPush.I.HasValue)
-                        stack.Push(new Variable(Types.TInteger, argPush.I.Value));
-                    else if (argPush.D.HasValue)
-                        stack.Push(new Variable(Types.TFloat, argPush.D.Value));
-                    else if (argPush.S != null)
-                        stack.Push(new Variable(Types.TString, argPush.S));
-                    else
-                        throw new Exception($"PUSH: unsupported literal type. IP: {ip}");
-                    break;
+                    {
+                        var argPush = instr.Arg?.Value ?? throw new Exception($"PUSH: argument required. IP: {ip}");
+                        switch (argPush)
+                        {
+                            case WiNumberValue nm:
+                                stack.Push(new Variable(Types.TInteger, nm.Value.Value));
+                                break;
+                            case WiFloatValue flt:
+                                stack.Push(new Variable(Types.TFloat, flt.Value.Value));
+                                break;
+                            case WiStringValue str:
+                                stack.Push(new Variable(Types.TString, str.Value.Value));
+                                break;
+                            default:
+                                throw new Exception($"PUSH: unsupported literal type. IP: {ip}");
+                        }
+                        break;
+                    }
                 case It.POP:
                     if (stack.Count == 0) throw new Exception($"POP: stack is empty. IP: {ip}");
                     stack.Pop();
@@ -55,19 +63,25 @@ namespace WiLang
                 case It.STORE:
                     if (stack.Count < 1) throw new Exception($"STORE: stack is empty. IP: {ip}");
                     var valueST = stack.Pop();
-                    var nameST = instr.Arg?.S ?? throw new Exception($"STORE: arg must be string var name. IP: {ip}");
+                    var nameST = instr.Arg?.Value is WiStringValue s ? s.Value.Value : null;
+                    if (nameST == null)
+                        throw new Exception($"STORE: arg must be string var name. IP: {ip}");
                     vars[nameST] = valueST;
                     break;
                 case It.LOAD:
-                    var nameLD = instr.Arg?.S ?? throw new Exception($"LOAD: arg must be string var name. IP: {ip}");
+                    var nameLD = instr.Arg?.Value is WiStringValue ws ? ws.Value.Value : null;
+                    if (nameLD == null)
+                        throw new Exception($"LOAD: arg must be string var name. IP: {ip}");
                     if (vars.TryGetValue(nameLD, out Variable varLD))
                         stack.Push(varLD);
                     else
                         throw new Exception($"LOAD: variable '{nameLD}' not found. IP: {ip}");
                     break;
                 case It.JUMP:
-                    var offset = instr.Arg?.I ?? throw new Exception($"JUMP: arg required. IP: {ip}");
-                    Jumps._MakeJump(offset, ref ip, ref bytecode, ref stack);
+                    var offset = instr.Arg?.Value is WiNumberValue num ? num.Value.Value : (int?)null;
+                    if (offset == null)
+                        throw new Exception($"JUMP: arg required. IP: {ip}");
+                    Jumps._MakeJump(offset.Value, ref ip, ref bytecode, ref stack);
                     break;
                 case It.JZ:
                     Jumps._ConditionalJump(false, ref ip, ref bytecode, ref stack);
@@ -106,9 +120,11 @@ namespace WiLang
                     ip = bytecode.Length;
                     break;
                 case It.CALL:
-                    var target = instr.Arg?.I ?? throw new Exception($"CALL: arg required. IP: {ip}");
+                    var offsetС = instr.Arg?.Value is WiNumberValue numС ? numС.Value.Value : (int?)null;
+                    if (offsetС == null)
+                        throw new Exception($"JUMP: arg required. IP: {ip}");
                     callStack.Push(ip + 1);
-                    Jumps._MakeJump(target, ref ip, ref bytecode, ref stack);
+                    Jumps._MakeJump(offsetС.Value, ref ip, ref bytecode, ref stack);
                     break;
                 case It.RET:
                     if (callStack.Count == 0) throw new Exception($"RET: call stack empty. IP: {ip}");

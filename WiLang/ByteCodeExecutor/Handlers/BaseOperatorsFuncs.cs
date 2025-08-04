@@ -6,6 +6,7 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 
+
 namespace WiLang
 {
     static class BaseOPs
@@ -73,7 +74,7 @@ namespace WiLang
             else
                 throw new Exception($"Sqrt: unsupported type {val.VarType}. IP: {ip}");
         }
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+
         public static void IncDec(WiStack<Variable> stack, bool isInc)
         {
             if (stack.Count == 0) throw new Exception((isInc ? "INC" : "DEC") + ": stack is empty");
