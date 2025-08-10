@@ -48,36 +48,43 @@ namespace WiLang
                     stack.Pop();
                     break;
                 case It.ADD:
-                    if (stack.Count < 2)
-                        throw new Exception($"ADD: stack has less than 2 values! IP: {ip}");
-                    stack.Push(stack.Pop() + stack.Pop());
+                    if (stack.Count < 2) throw new Exception($"ADD: stack has less than 2 values! IP: {ip}");
+                    {
+                        var b = stack.Pop();
+                        var a = stack.Pop();
+                        stack.Push(a + b);
+                    }
                     break;
+
                 case It.SUB:
-                    if (stack.Count < 2)
-                        throw new Exception($"SUB: stack has less than 2 values! IP: {ip}");
+                    if (stack.Count < 2) throw new Exception($"SUB: stack has less than 2 values! IP: {ip}");
                     {
                         var b = stack.Pop();
                         var a = stack.Pop();
                         stack.Push(a - b);
                     }
                     break;
+
                 case It.MUL:
-                    if (stack.Count < 2)
-                        throw new Exception($"MUL: stack has less than 2 values! IP: {ip}");
-                    stack.Push(stack.Pop() * stack.Pop());
+                    if (stack.Count < 2) throw new Exception($"MUL: stack has less than 2 values! IP: {ip}");
+                    {
+                        var b = stack.Pop();
+                        var a = stack.Pop();
+                        stack.Push(a * b);
+                    }
                     break;
+
                 case It.DIV:
-                    if (stack.Count < 2)
-                        throw new Exception($"DIV: stack has less than 2 values! IP: {ip}");
+                    if (stack.Count < 2) throw new Exception($"DIV: stack has less than 2 values! IP: {ip}");
                     {
                         var b = stack.Pop();
                         var a = stack.Pop();
                         stack.Push(a / b);
                     }
                     break;
+
                 case It.MOD:
-                    if (stack.Count < 2)
-                        throw new Exception($"MOD: stack has less than 2 values! IP: {ip}");
+                    if (stack.Count < 2) throw new Exception($"MOD: stack has less than 2 values! IP: {ip}");
                     {
                         var b = stack.Pop();
                         var a = stack.Pop();
@@ -97,7 +104,7 @@ namespace WiLang
                     break;
                 case It.PRINT:
                     if (stack.Count == 0) throw new Exception($"PRINT: stack is empty. IP: {ip}");
-                    Console.WriteLine(stack.Peek().Value);
+                    Console.Write(stack.Peek().AsString());
                     break;
                 case It.INPUT:
                     stack.Push(new Variable(Types.TString, Console.ReadLine() ?? ""));
@@ -129,12 +136,12 @@ namespace WiLang
                     Jumps._ConditionalJump(false, ref ip, ref bytecode, ref stack);
                     break;
 
-                case It.LT: CompareAndPush(ref stack, (a, b) => a < b); break;
-                case It.GT: CompareAndPush(ref stack, (a, b) => a > b); break;
-                case It.LE: CompareAndPush(ref stack, (a, b) => a <= b); break;
-                case It.GE: CompareAndPush(ref stack, (a, b) => a >= b); break;
-                case It.EQ: CompareAndPush(ref stack, (a, b) => a == b); break;
-                case It.NE: CompareAndPush(ref stack, (a, b) => a != b); break;
+                case It.LT: CompareAndPush(ref stack, CompDelegates.lt); break;
+                case It.GT: CompareAndPush(ref stack, CompDelegates.gt); break;
+                case It.LE: CompareAndPush(ref stack, CompDelegates.le); break;
+                case It.GE: CompareAndPush(ref stack, CompDelegates.ge); break;
+                case It.EQ: CompareAndPush(ref stack, CompDelegates.eq); break;
+                case It.NE: CompareAndPush(ref stack, CompDelegates.ne); break;
 
                 case It.DUP:
                     stack.Dup();

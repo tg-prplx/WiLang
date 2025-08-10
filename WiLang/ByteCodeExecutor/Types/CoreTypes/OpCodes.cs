@@ -39,5 +39,9 @@ namespace WiLang
         CASTS,
         CASTI,
         HALT,
+        LISTGET,
+        LISTPUT,
+        LISTRM,
+        Count
     };
 }

@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace WiLang
 {
-    enum Types
+    public enum Types
     {
         TNone,
         TString,
